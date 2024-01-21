@@ -1,30 +1,38 @@
 import socket
+import sys
 import threading
-import clientplayer
-
+import button
 import pygame
 
 # Client constants
-HEADER = 64
+HEADER = 16
 PORT = 5050  # This is the port number
 FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECTED"
 SERVER = socket.gethostbyname(socket.gethostname())
+
+print(type(SERVER))
+
 ADDR = (SERVER, PORT)
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(ADDR)
 conn = SERVER
+
+# client.connect(ADDR)
 
 # Game constants
 pygame.init()
-S_WIDTH, S_HEIGHT = 600, 400
-screen = pygame.display.set_mode((S_WIDTH, S_HEIGHT))
+S_WIDTH, S_HEIGHT = 1200, 800
+Screen = pygame.display.set_mode((S_WIDTH, S_HEIGHT))
 clock = pygame.time.Clock()
 RUNNING = True
 FPS = 30
+JustOpened = True
+PLAYER_INPUT = []
+MAX_INPUT = 24
+global CONNECT_RESPONSE
+CONNECT_RESPONSE = "Test"
 
 
-# This
 def ping():
     while RUNNING:
         msg_length = client.recv(HEADER).decode(FORMAT)
@@ -34,7 +42,7 @@ def ping():
         print(f"Server said : {msg}")
 
 
-# The send function believe it or not, but it sends a message
+# The send function believe it or not, sends a message
 def send(msg):
     message = msg.encode(FORMAT)
     msg_length = len(message)
@@ -44,18 +52,123 @@ def send(msg):
     client.send(message)
 
 
-send("Hello, this is a test")
-thread = threading.Thread(target=ping)
-thread.start()
+def get_font(size):
+    return pygame.font.SysFont("Press-Start-2p", size, False, False)
 
-while RUNNING:
-    clock.tick(FPS)
-    screen.fill((50, 50, 100))
 
-    # Events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            send(DISCONNECT_MESSAGE)
-            RUNNING = False
-    pygame.display.update()
-pygame.quit()
+# send("Hello, this is a test")
+
+
+# thread = threading.Thread(target=ping)
+# thread.start()
+
+def Gameplay():
+    pass
+
+
+def Connect(address):
+
+    global CONNECT_RESPONSE
+    print("started")
+
+    localstring = "localhost"
+
+    if address.lower() == localstring:
+        address = SERVER
+        print(address)
+    else:
+        try:
+            address = (address, PORT)
+            client.connect(address)
+            CONNECT_RESPONSE = f"Connecting to {address}"
+        except:
+            CONNECT_RESPONSE = "That didn't work lol, u faggot"
+            Play()
+    print("done")
+    address = (address, PORT)
+    client.connect(address)
+
+
+def Play():
+    global CONNECT_RESPONSE
+    print(CONNECT_RESPONSE)
+    while True:
+        PLAY_MENU_MOUSE = pygame.mouse.get_pos()
+        Screen.fill((50, 0, 0))  # Makes screen black so previous "screen" will not show its previous stuff
+        INPUT_TEXT = "".join(PLAYER_INPUT)
+
+        PLAY_TEXT = get_font(45).render(INPUT_TEXT, True, "White")
+        PLAY_RECT = PLAY_TEXT.get_rect(center=(S_WIDTH / 2, (S_HEIGHT / 2) - 50))
+        Screen.blit(PLAY_TEXT, PLAY_RECT)
+
+        DIRECTION_TEXT = get_font(75).render("Enter Address", True, "White")
+        DIRECTION_RECT = DIRECTION_TEXT.get_rect(center=(S_WIDTH / 2, (S_HEIGHT / 2) - 100))
+        Screen.blit(DIRECTION_TEXT, DIRECTION_RECT)
+
+        CONSOLE_TEXT = get_font(45).render(CONNECT_RESPONSE, True, "purple")
+        CONSOLE_RECT = CONSOLE_TEXT.get_rect(center=(S_WIDTH / 2, (S_HEIGHT / 2) + 75))
+        Screen.blit(CONSOLE_TEXT, CONSOLE_RECT)
+
+        PLAY_TEXTBOX = button.Button(image=None, pos=(S_WIDTH / 2, S_HEIGHT / 2), text_input="Connect",
+                                     font=get_font(75))
+
+        PLAY_TEXTBOX.changeColor(PLAY_MENU_MOUSE)
+        PLAY_TEXTBOX.update(Screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                # send(DISCONNECT_MESSAGE)
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.TEXTINPUT:
+                char = event.text
+                if len(PLAYER_INPUT) < MAX_INPUT:
+                    PLAYER_INPUT.append(char)
+                    print(PLAYER_INPUT)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    if len(PLAYER_INPUT) > 0:
+                        del PLAYER_INPUT[-1]
+                        print(PLAYER_INPUT)
+            if event.type == pygame.MOUSEBUTTONDOWN and PLAY_TEXTBOX.checkForInput(PLAY_MENU_MOUSE):
+                print("clicked")
+                Connect(INPUT_TEXT)
+                break
+
+        pygame.display.update()
+
+
+# Main Menu Constants
+MAIN_MENU_PLAY = button.Button(image=None, pos=(S_WIDTH / 2, S_HEIGHT / 2), text_input="Play", font=get_font(75))
+
+
+def MainMenu():
+    while True:
+        MAIN_MENU_MOUSE = pygame.mouse.get_pos()
+        clock.tick(FPS)
+        Screen.fill((0, 0, 50))
+
+        MAIN_MENU_TEXT = get_font(45).render("SocketSucker!", True, "White")
+        MAIN_MENU_RECT = MAIN_MENU_TEXT.get_rect(center=(S_WIDTH / 2, (S_HEIGHT / 2) - 50))
+        Screen.blit(MAIN_MENU_TEXT, MAIN_MENU_RECT)
+
+        MAIN_MENU_PLAY.changeColor(MAIN_MENU_MOUSE)
+        MAIN_MENU_PLAY.update(Screen)
+
+        # Events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                # send(DISCONNECT_MESSAGE)
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and MAIN_MENU_PLAY.checkForInput(MAIN_MENU_MOUSE):
+                print("going to play screen...")
+                Play()
+                break
+
+        pygame.display.update()
+
+
+if JustOpened:
+    MainMenu()
+    JustOpened = False
