@@ -30,10 +30,11 @@ PLAYER_INPUT = []
 NAME_INPUT = []
 MAX_INPUT = 24
 global CONNECT_RESPONSE
-CONNECT_RESPONSE = "Test"
+CONNECT_RESPONSE = ""
 
 
 def ping():
+    msg = ""
     while RUNNING:
         print("pinging")
         msg_length = client.recv(HEADER).decode(FORMAT)
@@ -65,7 +66,7 @@ def Identity():
     thread.start()
 
     while True:
-        NAME_STRING = "".join(PLAYER_INPUT)
+        NAME_STRING = "".join(NAME_INPUT)
         Screen.fill((0, 0, 0))
 
         NAME_TEXT = get_font(45).render(NAME_STRING, True, "White")
@@ -88,6 +89,8 @@ def Identity():
                         del NAME_INPUT[-1]
                         print(NAME_INPUT)
 
+        pygame.display.update()
+
 
 def Gameplay():
 
@@ -97,8 +100,6 @@ def Gameplay():
     while True:
         GAMEPLAY_MOUSE = pygame.mouse.get_pos()
         Screen.fill((0, 0, 0))
-
-
 
 
 def Connect(address):
@@ -121,7 +122,6 @@ def Connect(address):
     address = (address, PORT)
     client.connect(address)
     Identity()
-
 
 def Play():
     global CONNECT_RESPONSE
