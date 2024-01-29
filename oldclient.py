@@ -3,6 +3,7 @@ import sys
 import threading
 import button
 import pygame
+import pickle
 
 # Client constants
 HEADER = 16
@@ -10,8 +11,6 @@ PORT = 5050  # This is the port number
 FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECTED"
 SERVER = socket.gethostbyname(socket.gethostname())
-
-print(type(SERVER))
 
 ADDR = (SERVER, PORT)
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,6 +27,7 @@ RUNNING = True
 FPS = 30
 JustOpened = True
 PLAYER_INPUT = []
+NAME_INPUT = []
 MAX_INPUT = 24
 global CONNECT_RESPONSE
 CONNECT_RESPONSE = "Test"
@@ -35,6 +35,7 @@ CONNECT_RESPONSE = "Test"
 
 def ping():
     while RUNNING:
+        print("pinging")
         msg_length = client.recv(HEADER).decode(FORMAT)
         if msg_length:
             msg_length = int(msg_length)
@@ -58,12 +59,46 @@ def get_font(size):
 
 # send("Hello, this is a test")
 
+def Identity():
 
-# thread = threading.Thread(target=ping)
-# thread.start()
+    thread = threading.Thread(target=ping)
+    thread.start()
+
+    while True:
+        NAME_STRING = "".join(PLAYER_INPUT)
+        Screen.fill((0, 0, 0))
+
+        NAME_TEXT = get_font(45).render(NAME_STRING, True, "White")
+        NAME_RECT = NAME_TEXT.get_rect(center=(S_WIDTH / 2, (S_HEIGHT / 2) - 50))
+        Screen.blit(NAME_TEXT, NAME_RECT)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                # send(DISCONNECT_MESSAGE)
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.TEXTINPUT:
+                char = event.text
+                if len(NAME_INPUT) < MAX_INPUT:
+                    NAME_INPUT.append(char)
+                    print(NAME_INPUT)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    if len(NAME_INPUT) > 0:
+                        del NAME_INPUT[-1]
+                        print(NAME_INPUT)
+
 
 def Gameplay():
-    pass
+
+    send("!GETPLAYER")
+    LOCAL_PLAYER = ""
+
+    while True:
+        GAMEPLAY_MOUSE = pygame.mouse.get_pos()
+        Screen.fill((0, 0, 0))
+
+
 
 
 def Connect(address):
@@ -75,18 +110,17 @@ def Connect(address):
 
     if address.lower() == localstring:
         address = SERVER
-        print(address)
     else:
         try:
             address = (address, PORT)
             client.connect(address)
             CONNECT_RESPONSE = f"Connecting to {address}"
         except:
-            CONNECT_RESPONSE = "That didn't work lol, u faggot"
+            CONNECT_RESPONSE = "Connection Timed Out"
             Play()
-    print("done")
     address = (address, PORT)
     client.connect(address)
+    Identity()
 
 
 def Play():
