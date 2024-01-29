@@ -1,5 +1,6 @@
 import socket
 import threading
+import pickle
 
 
 HEADER = 16
@@ -8,6 +9,7 @@ SERVER = socket.gethostbyname(socket.gethostname())  # This gets my local IPV4 A
 ADDR = (SERVER, PORT)  # When we bind our socket to a specific address it needs to be in a tuple
 FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECTED"
+PLAYER_REQUEST = "!GETPLAYER"
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # What type of addresses we are looking for
 server.bind(ADDR)  # Binding the address to the socket
@@ -28,6 +30,8 @@ def handle_client(conn, addr):
             msg = conn.recv(msg_length).decode(FORMAT)
             if msg == DISCONNECT_MESSAGE:
                 connected = False
+            elif msg == PLAYER_REQUEST:
+                pass
 
             print(f"{addr} {msg}")
             send("Test", conn)
