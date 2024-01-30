@@ -9,13 +9,17 @@ SERVER = socket.gethostbyname(socket.gethostname())  # This gets my local IPV4 A
 ADDR = (SERVER, PORT)  # When we bind our socket to a specific address it needs to be in a tuple
 FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECTED"
-PLAYER_REQUEST = "!GETPLAYER"
+NAME_REQ = "!NAME:"
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # What type of addresses we are looking for
 server.bind(ADDR)  # Binding the address to the socket
+local_name = "--EmptyData--"
 
 
 # Listening
+
+def get_player():
+    pass
 
 
 def handle_client(conn, addr):
@@ -24,17 +28,19 @@ def handle_client(conn, addr):
     connected = True
     while connected:
         msg_length = conn.recv(HEADER).decode(FORMAT)
-        print(msg_length)
         if msg_length:
             msg_length = int(msg_length)
             msg = conn.recv(msg_length).decode(FORMAT)
             if msg == DISCONNECT_MESSAGE:
                 connected = False
-            elif msg == PLAYER_REQUEST:
-                pass
+            elif NAME_REQ in msg:
+                local_name = (msg[len(NAME_REQ)::])
+                send(local_name, conn)
+
+                get_player()
 
             print(f"{addr} {msg}")
-            send("Test", conn)
+            send(local_name, conn)
 
     conn.close()
 
