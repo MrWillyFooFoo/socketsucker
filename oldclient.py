@@ -36,12 +36,11 @@ CONNECT_RESPONSE = ""
 def ping():
     msg = ""
     while RUNNING:
-        print("pinging")
         msg_length = client.recv(HEADER).decode(FORMAT)
         if msg_length:
             msg_length = int(msg_length)
             msg = client.recv(msg_length).decode(FORMAT)
-        print(f"Server said : {msg}")
+        print(msg)
 
 
 # The send function believe it or not, sends a message
@@ -61,21 +60,27 @@ def get_font(size):
 # send("Hello, this is a test")
 
 def Identity():
-
     thread = threading.Thread(target=ping)
     thread.start()
 
     while True:
         NAME_STRING = "".join(NAME_INPUT)
         Screen.fill((0, 0, 0))
+        IDENTITY_MOUSE = pygame.mouse.get_pos()
 
         NAME_TEXT = get_font(45).render(NAME_STRING, True, "White")
         NAME_RECT = NAME_TEXT.get_rect(center=(S_WIDTH / 2, (S_HEIGHT / 2) - 50))
         Screen.blit(NAME_TEXT, NAME_RECT)
 
+        IDENTITY_CONFIRM = button.Button(image=None, pos=(S_WIDTH / 2, S_HEIGHT / 2), text_input="Connect",
+                                         font=get_font(75))
+
+        IDENTITY_CONFIRM.changeColor(IDENTITY_MOUSE)
+        IDENTITY_CONFIRM.update(Screen)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                # send(DISCONNECT_MESSAGE)
+                send(DISCONNECT_MESSAGE)
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.TEXTINPUT:
@@ -88,12 +93,15 @@ def Identity():
                     if len(NAME_INPUT) > 0:
                         del NAME_INPUT[-1]
                         print(NAME_INPUT)
+            if event.type == pygame.MOUSEBUTTONDOWN and IDENTITY_CONFIRM.checkForInput(IDENTITY_MOUSE):
+                send(f"!NAME:{NAME_STRING}")
+                Gameplay()
+                break
 
         pygame.display.update()
 
 
 def Gameplay():
-
     send("!GETPLAYER")
     LOCAL_PLAYER = ""
 
@@ -103,7 +111,6 @@ def Gameplay():
 
 
 def Connect(address):
-
     global CONNECT_RESPONSE
     print("started")
 
@@ -122,6 +129,7 @@ def Connect(address):
     address = (address, PORT)
     client.connect(address)
     Identity()
+
 
 def Play():
     global CONNECT_RESPONSE
