@@ -2,7 +2,7 @@ import socket
 import threading
 import pickle
 
-
+# Server Constants
 HEADER = 16
 PORT = 5050  # This is the port number
 SERVER = socket.gethostbyname(socket.gethostname())  # This gets my local IPV4 Address
@@ -14,6 +14,8 @@ NAME_REQ = "!NAME:"
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # What type of addresses we are looking for
 server.bind(ADDR)  # Binding the address to the socket
 local_name = "--EmptyData--"
+
+# Game Constants
 
 
 # Listening
@@ -40,7 +42,6 @@ def handle_client(conn, addr):
                 get_player()
 
             print(f"{addr} {msg}")
-            send(local_name, conn)
 
     conn.close()
 
