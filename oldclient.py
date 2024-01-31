@@ -87,12 +87,10 @@ def Identity():
                 char = event.text
                 if len(NAME_INPUT) < MAX_INPUT:
                     NAME_INPUT.append(char)
-                    print(NAME_INPUT)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
                     if len(NAME_INPUT) > 0:
                         del NAME_INPUT[-1]
-                        print(NAME_INPUT)
             if event.type == pygame.MOUSEBUTTONDOWN and IDENTITY_CONFIRM.checkForInput(IDENTITY_MOUSE):
                 send(f"!NAME:{NAME_STRING}")
                 Gameplay()
@@ -103,11 +101,29 @@ def Identity():
 
 def Gameplay():
     send("!GETPLAYER")
-    LOCAL_PLAYER = ""
+    LOCAL_PLAYER = None
+
+    ITEMS = []
+    PLAYERS = []
+    TEMPS = []
 
     while True:
         GAMEPLAY_MOUSE = pygame.mouse.get_pos()
-        Screen.fill((0, 0, 0))
+        bg_color = (76, 176, 81)
+        Screen.fill(bg_color)
+
+        # Loop through all the items within the three main lists of instances and update their appearance on the clients
+        # screen.
+
+
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                # send(DISCONNECT_MESSAGE)
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.update()
 
 
 def Connect(address):
