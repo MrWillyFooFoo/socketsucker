@@ -4,6 +4,7 @@ import threading
 import button
 import pygame
 import pickle
+import player
 
 # Client constants
 HEADER = 16
@@ -93,15 +94,16 @@ def Identity():
                         del NAME_INPUT[-1]
             if event.type == pygame.MOUSEBUTTONDOWN and IDENTITY_CONFIRM.checkForInput(IDENTITY_MOUSE):
                 send(f"!NAME:{NAME_STRING}")
-                Gameplay()
+                Gameplay(NAME_STRING)
                 break
 
         pygame.display.update()
 
 
-def Gameplay():
+def Gameplay(local_name):
     send("!GETPLAYER")
-    LOCAL_PLAYER = None
+    local_pos = 250, 250
+    LOCAL_PLAYER = player.Player(local_name, local_pos)
 
     ITEMS = []
     PLAYERS = []
@@ -112,16 +114,16 @@ def Gameplay():
         bg_color = (76, 176, 81)
         Screen.fill(bg_color)
 
-        # Loop through all the items within the three main lists of instances and update their appearance on the clients
-        # screen.
-
-
+        LOCAL_PLAYER.update(Screen)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 # send(DISCONNECT_MESSAGE)
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.TEXTINPUT:
+                char = event.text
+                print(char)
 
         pygame.display.update()
 
