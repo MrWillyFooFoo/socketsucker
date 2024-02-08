@@ -2,6 +2,7 @@ import pygame
 import random
 
 PLAYER_SIZE = 128, 128
+SPEED = 3
 
 
 class Player:
@@ -17,23 +18,18 @@ class Player:
 
         self.color = (random.randrange(255), random.randrange(255), random.randrange(255))
 
-        self.position = (self.x_pos, self.y_pos)
-
     def update(self, surface):
+        self.rect = pygame.Rect((self.x_pos, self.y_pos), PLAYER_SIZE)
         pygame.draw.rect(surface, self.color, self.rect)
 
-    def update_position(self, key):
-        key = key.lower()
-        match key:
-            case "w":
-                self.y_pos = 3
-            case "a":
-                self.x_pos -= 2
-            case "s":
-                self.y_pos += 2
-            case "d":
-                self.x_pos += 2
+    def move(self, movement):
+        hinput, vinput = movement[0], movement[1]
 
+        self.x_pos += hinput * SPEED
+        self.y_pos += vinput * SPEED
+
+    def player_input(self, key):
+        pass
 
     @property
     def name(self):
@@ -46,5 +42,3 @@ class Player:
     @property
     def get_position(self):
         return self.position
-
-
