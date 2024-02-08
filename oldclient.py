@@ -37,6 +37,7 @@ CONNECT_RESPONSE = ""
 def ping():
     msg = ""
     while RUNNING:
+        clock.tick(FPS)
         msg_length = client.recv(HEADER).decode(FORMAT)
         if msg_length:
             msg_length = int(msg_length)
@@ -65,6 +66,7 @@ def Identity():
     thread.start()
 
     while True:
+        clock.tick(FPS)
         NAME_STRING = "".join(NAME_INPUT)
         Screen.fill((0, 0, 0))
         IDENTITY_MOUSE = pygame.mouse.get_pos()
@@ -110,6 +112,7 @@ def Gameplay(local_name):
     TEMPS = []
 
     while True:
+        clock.tick(FPS)
         GAMEPLAY_MOUSE = pygame.mouse.get_pos()
         bg_color = (76, 176, 81)
         Screen.fill(bg_color)
@@ -123,7 +126,10 @@ def Gameplay(local_name):
                 sys.exit()
             if event.type == pygame.TEXTINPUT:
                 char = event.text
-                print(char)
+                LOCAL_PLAYER.player_input(char)
+            keys = pygame.key.get_pressed()
+            movement = (keys[ord("d")] - keys[ord("a")]), (keys[ord("s")] - keys[ord("w")])
+            LOCAL_PLAYER.move(movement)
 
         pygame.display.update()
 
@@ -153,6 +159,7 @@ def Play():
     global CONNECT_RESPONSE
     print(CONNECT_RESPONSE)
     while True:
+        clock.tick(FPS)
         PLAY_MENU_MOUSE = pygame.mouse.get_pos()
         Screen.fill((50, 0, 0))  # Makes screen black so previous "screen" will not show its previous stuff
         INPUT_TEXT = "".join(PLAYER_INPUT)
@@ -204,6 +211,7 @@ MAIN_MENU_PLAY = button.Button(image=None, pos=(S_WIDTH / 2, S_HEIGHT / 2), text
 
 def MainMenu():
     while True:
+        clock.tick(FPS)
         MAIN_MENU_MOUSE = pygame.mouse.get_pos()
         clock.tick(FPS)
         Screen.fill((0, 0, 50))
