@@ -25,7 +25,7 @@ S_WIDTH, S_HEIGHT = 1200, 800
 Screen = pygame.display.set_mode((S_WIDTH, S_HEIGHT))
 clock = pygame.time.Clock()
 RUNNING = True
-FPS = 30
+FPS = 60
 JustOpened = True
 PLAYER_INPUT = []
 NAME_INPUT = []
@@ -119,17 +119,16 @@ def Gameplay(local_name):
 
         LOCAL_PLAYER.update(Screen)
 
+        keys = pygame.key.get_pressed()
+        movement = (keys[ord("d")] - keys[ord("a")]), (keys[ord("s")] - keys[ord("w")])
+        if movement[0] != 0 or movement[1] != 0:
+            LOCAL_PLAYER.move(movement)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 # send(DISCONNECT_MESSAGE)
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.TEXTINPUT:
-                char = event.text
-                LOCAL_PLAYER.player_input(char)
-            keys = pygame.key.get_pressed()
-            movement = (keys[ord("d")] - keys[ord("a")]), (keys[ord("s")] - keys[ord("w")])
-            LOCAL_PLAYER.move(movement)
 
         pygame.display.update()
 
