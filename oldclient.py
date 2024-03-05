@@ -47,13 +47,17 @@ def ping():
 
 # The send function believe it or not, sends a message
 def send(msg):
-    message = msg.encode(FORMAT)
+    try:
+        message = msg.encode(FORMAT)
+        print(f"SEND PART>>>>: {type(message)}")
+    except:
+        message = msg
+
     msg_length = len(message)
     send_length = str(msg_length).encode(FORMAT)
     send_length += b" " * (HEADER - len(send_length))
     client.send(send_length)
     client.send(message)
-
 
 def get_font(size):
     return pygame.font.SysFont("Press-Start-2p", size, False, False)
@@ -95,17 +99,19 @@ def Identity():
                     if len(NAME_INPUT) > 0:
                         del NAME_INPUT[-1]
             if event.type == pygame.MOUSEBUTTONDOWN and IDENTITY_CONFIRM.checkForInput(IDENTITY_MOUSE):
-                send(f"!NAME:{NAME_STRING}")
-                Gameplay(NAME_STRING)
-                break
+                if not len(NAME_STRING) < 3:
+                    send(f"!NAME:{NAME_STRING}")
+                    Gameplay(NAME_STRING)
+                    break
 
         pygame.display.update()
 
 
 def Gameplay(local_name):
-    send("!GETPLAYER")
     local_pos = 250, 250
     LOCAL_PLAYER = player.Player(local_name, local_pos)
+    pickledplr = pickle.dumps(LOCAL_PLAYER.get_rect())
+    send(pickledplr)
 
     ITEMS = []
     PLAYERS = []
@@ -126,7 +132,7 @@ def Gameplay(local_name):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                # send(DISCONNECT_MESSAGE)
+                send(DISCONNECT_MESSAGE)
                 pygame.quit()
                 sys.exit()
 
@@ -137,7 +143,7 @@ def Connect(address):
     global CONNECT_RESPONSE
     print("started")
 
-    localstring = "localhost"
+    localstring = ""
 
     if address.lower() == localstring:
         address = SERVER
@@ -190,14 +196,11 @@ def Play():
                 char = event.text
                 if len(PLAYER_INPUT) < MAX_INPUT:
                     PLAYER_INPUT.append(char)
-                    print(PLAYER_INPUT)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
                     if len(PLAYER_INPUT) > 0:
                         del PLAYER_INPUT[-1]
-                        print(PLAYER_INPUT)
             if event.type == pygame.MOUSEBUTTONDOWN and PLAY_TEXTBOX.checkForInput(PLAY_MENU_MOUSE):
-                print("clicked")
                 Connect(INPUT_TEXT)
                 break
 
