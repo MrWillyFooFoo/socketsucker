@@ -1,53 +1,46 @@
-import socket
-import sys
-import threading
-import button
-import pygame
-import pickle
-import player
+import socket, sys, threading, button, pygame, pickle, player
 
-# Client constants
-HEADER = 16
-PORT = 5050  # This is the port number
-FORMAT = "utf-8"
-DISCONNECT_MESSAGE = "!DISCONNECTED"
-SERVER = socket.gethostbyname(socket.gethostname())
+# -----CLIENT CONSTANTS -----#
+HEADER = 16                                         # Header of the packets.
+PORT = 5050                                         # This is the port number.
+FORMAT = "utf-8"                                    # Format which we are encoding in.
+DISCONNECT_MESSAGE = "!DISCONNECTED"                # If this message is sent we disconnect from the server.
+SERVER = "192.168.1.158"                            # socket.gethostbyname(socket.gethostname()).
 
-ADDR = (SERVER, PORT)
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ADDR = (SERVER, PORT)                                               # stores the port and ip in a tuple.
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)          # Gets the clients ipv4.
 conn = SERVER
 
-# client.connect(ADDR)
+# -----GAME CONSTANTS-----
+pygame.init()                                                       # Initializes pygame.
+S_WIDTH, S_HEIGHT = 1200, 800                                       # Height and width of the screen.
+Screen = pygame.display.set_mode((S_WIDTH, S_HEIGHT))               # the display with set height and width.
+clock = pygame.time.Clock()                                         # the clock object.
 
-# Game constants
-pygame.init()
-S_WIDTH, S_HEIGHT = 1200, 800
-Screen = pygame.display.set_mode((S_WIDTH, S_HEIGHT))
-clock = pygame.time.Clock()
-RUNNING = True
-FPS = 60
-JustOpened = True
-PLAYER_INPUT = []
-NAME_INPUT = []
-MAX_INPUT = 24
-global CONNECT_RESPONSE
-CONNECT_RESPONSE = ""
-
-
-def ping():
-    msg = ""
-    while RUNNING:
-        clock.tick(FPS)
-        msg_length = client.recv(HEADER).decode(FORMAT)
-        if msg_length:
-            msg_length = int(msg_length)
-            msg = client.recv(msg_length).decode(FORMAT)
-        print(msg)
+RUNNING = True                                      # The game is running.
+FPS = 60                                            # The frames per second.
+JustOpened = True                                   # Whether or not the program was just opened.
+PLAYER_INPUT = []                                   # Stores player keyboard input.
+NAME_INPUT = []                                     # Stores specifically the name.
+MAX_INPUT = 50                                      # Max ammount of characters allowed in input.
+global CONNECT_RESPONSE                             # Global variable.
+CONNECT_RESPONSE = ""                               # used to display responses to connection issues (debug).
 
 
-# The send function believe it or not, sends a message
-def send(msg):
-    try:
+def ping():                                         # Pings the server, will be used in loops to check for updates
+    msg = ""                                        # Variable used to store the message
+    while RUNNING:                                  # Constantly checking
+
+        clock.tick(FPS)                                             # Runs at FPS ammout of times each second
+        msg_length = client.recv(HEADER).decode(FORMAT)             # recv the size of the incoming message
+        if msg_length:                                              # If the message = to something
+            msg_length = int(msg_length)                            # Converts to integer
+            msg = client.recv(msg_length).decode(FORMAT)            # Decodes the message using utf-8
+        print(msg)                                                  # Prints the message which was sent to the client
+
+
+def send(msg):                                      # The send function believe it or not, sends a message
+    try:                                            #
         message = msg.encode(FORMAT)
         print(f"SEND PART>>>>: {type(message)}")
     except:
@@ -134,14 +127,14 @@ def Gameplay(local_name):
             if event.type == pygame.QUIT:
                 send(DISCONNECT_MESSAGE)
                 pygame.quit()
-                sys.exit()
+                sys.exit("GameClosed")
 
         pygame.display.update()
 
 
 def Connect(address):
     global CONNECT_RESPONSE
-    print("started")
+    print(f"started {address}")
 
     localstring = ""
 
