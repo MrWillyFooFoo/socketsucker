@@ -1,7 +1,7 @@
 import pygame
 import random
 import math
-import sympy
+import pickle
 
 PLAYER_SIZE = 128, 128
 SPEED = 0.1
@@ -20,19 +20,17 @@ class Player:
 
         self.color = (random.randrange(255), random.randrange(100), random.randrange(255))
 
+        pickle.dumps(self.rect)
+
     def update(self, surface):
         self.rect = pygame.Rect((self.x_pos, self.y_pos), PLAYER_SIZE)
         pygame.draw.rect(surface, self.color, self.rect)
 
     def move(self, movement):
         hinput, vinput = movement[0], movement[1]
-        raddir = math.atan2(0 - vinput, hinput)  # Direction in radians
-        degdir = (raddir * (180 / math.pi))
+        degdir = math.degrees(math.atan2(0 - vinput, hinput))  # Direction in degrees
         pntdir = (degdir + 360) % 360
-        radlen = [(SPEED * math.cos(math.radians(pntdir))), (SPEED * -math.sin(math.radians(pntdir)))]
-        radlen[0] = math.degrees(radlen[0])
-        radlen[1] = math.degrees(radlen[1])
-        print(radlen[0], radlen[1])
+        radlen = [math.degrees(SPEED * math.cos(math.radians(pntdir))), math.degrees(SPEED * -math.sin(math.radians(pntdir)))]
 
         self.x_pos += radlen[0]
         self.y_pos += radlen[1]
@@ -48,6 +46,5 @@ class Player:
     def name(self, value):
         self.Name = value
 
-    @property
-    def get_position(self):
-        return self.position
+    def get_rect(self):
+        return self.rect
