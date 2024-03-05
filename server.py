@@ -10,38 +10,57 @@ ADDR = (SERVER, PORT)  # When we bind our socket to a specific address it needs 
 FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECTED"
 NAME_REQ = "!NAME:"
+MOVE_REQ = "!MOVE"
+ADDCHAR_REQ = "!ADDCHAR"
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # What type of addresses we are looking for
 server.bind(ADDR)  # Binding the address to the socket
-local_name = "--EmptyData--"
 
-# Game Constants
+# Game constants
+PLAYER_SIZE = 128
+S_WIDTH, S_HEIGHT = 1200, 800
+FPS = 60
 
 
 # Listening
-
-def get_player():
-    pass
-
-
 def handle_client(conn, addr):
     print(f"[New connection] {addr} connected, assigning a rect.")
 
     connected = True
+
     while connected:
+
         msg_length = conn.recv(HEADER).decode(FORMAT)
-        if msg_length:
+
+        if msg_length:  # if recieving data
+
             msg_length = int(msg_length)
-            msg = conn.recv(msg_length).decode(FORMAT)
-            if msg == DISCONNECT_MESSAGE:
-                connected = False
-            elif NAME_REQ in msg:
-                local_name = (msg[len(NAME_REQ)::])
-                send(local_name, conn)
+            data = conn.recv(msg_length)
+            obj = False
 
-                get_player()
+            try:
+                msg = data.decode(FORMAT)
+            except:
+                msg = pickle.loads(data)
+                obj = True
 
-            print(f"{addr} {msg}")
+            if not obj:  # If msg was not an object
+
+                if msg == DISCONNECT_MESSAGE:
+
+                    connected = False
+
+                elif NAME_REQ in msg:
+
+                    client_name = (msg[len(NAME_REQ)::])
+
+                    send(client_name, conn)
+
+                    print(client_name)
+            else:
+                dataclass = type(msg)
+
+            print(f"{addr} said: {msg}")
 
     conn.close()
 
