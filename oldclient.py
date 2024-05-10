@@ -2,10 +2,10 @@ import socket, sys, threading, button, pygame, pickle, player
 
 # -----CLIENT CONSTANTS -----#
 HEADER = 16                                         # Header of the packets.
-PORT = 5050                                         # This is the port number.
+PORT = 6050                                         # This is the port number.
 FORMAT = "utf-8"                                    # Format which we are encoding in.
 DISCONNECT_MESSAGE = "!DISCONNECTED"                # If this message is sent we disconnect from the server.
-SERVER = "192.168.1.158"                            # socket.gethostbyname(socket.gethostname()).
+SERVER = socket.gethostbyname(socket.gethostname())
 
 ADDR = (SERVER, PORT)                                               # stores the port and ip in a tuple.
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)          # Gets the clients ipv4.
@@ -22,35 +22,86 @@ FPS = 60                                            # The frames per second.
 JustOpened = True                                   # Whether or not the program was just opened.
 PLAYER_INPUT = []                                   # Stores player keyboard input.
 NAME_INPUT = []                                     # Stores specifically the name.
+CLIENT_CHAT = []
 MAX_INPUT = 50                                      # Max ammount of characters allowed in input.
-global CONNECT_RESPONSE                             # Global variable.
+global CONNECT_RESPONSE
+PLAYERS = []                                        # Global variable.
+CHAT = []
 CONNECT_RESPONSE = ""                               # used to display responses to connection issues (debug).
+CHAT_REQ = "!CHAT"
 
 
-def ping():                                         # Pings the server, will be used in loops to check for updates
+def chat_request(message):
+    thing = "!CHAT"
+    return thing+""+message
+
+
+def ping():
+    global PLAYERS                                  # Pings the server, will be used in loops to check for updates
     msg = ""                                        # Variable used to store the message
     while RUNNING:                                  # Constantly checking
 
-        clock.tick(FPS)                                             # Runs at FPS ammout of times each second
-        msg_length = client.recv(HEADER).decode(FORMAT)             # recv the size of the incoming message
+        clock.tick(FPS)
+
+        msg_length = client.recv(HEADER).decode(FORMAT)
+        # recv the size of the incoming message
         if msg_length:                                              # If the message = to something
-            msg_length = int(msg_length)                            # Converts to integer
-            msg = client.recv(msg_length).decode(FORMAT)            # Decodes the message using utf-8
-        print(msg)                                                  # Prints the message which was sent to the client
+            msg_length = int(msg_length)
+            obj = False                                             # Converts to integer
+            msg = client.recv(msg_length)
+            try:
+                newmessage = msg.decode(FORMAT)          # Decodes the message using utf-8
+            except:
+                newmessage = pickle.loads(msg)
+                obj = True
+
+            if not obj:
+
+                if CHAT_REQ in newmessage:
+                    msg = newmessage.split(";")
+                    message = msg[0]
+                    message.removeprefix(CHAT_REQ)
+                    sender = msg[1]
+
+                    print(f"{sender} Said: {message}...")
+
+            elif type(newmessage) == pygame.rect.Rect:
+                rect = newmessage
+                Player_Pos = rect.x, rect.y
+
+                if len(PLAYERS) == 0:
+                    pass
+                elif len(PLAYERS) == 1:
+
+                    OtherPlayer = player.Player("Name", rect)
+
+                    PLAYERS.append(OtherPlayer)
+
+                elif len(PLAYERS) == 2:
+
+                    Other = PLAYERS[1]
+                    Other.changex(Player_Pos[0])
+                    Other.changey(Player_Pos[1])
+
+                elif len(PLAYERS) < 2:
+                    Temp = PLAYERS[0]
+                    PLAYERS = [Temp]
 
 
 def send(msg):                                      # The send function believe it or not, sends a message
     try:                                            #
         message = msg.encode(FORMAT)
-        print(f"SEND PART>>>>: {type(message)}")
+        print(f"Sending a message, no rect {type(message)}")
     except:
-        message = msg
+        message = pickle.dumps(msg)
+        print("SENDING RECT TO SERVER")
 
     msg_length = len(message)
     send_length = str(msg_length).encode(FORMAT)
     send_length += b" " * (HEADER - len(send_length))
     client.send(send_length)
     client.send(message)
+
 
 def get_font(size):
     return pygame.font.SysFont("Press-Start-2p", size, False, False)
@@ -101,35 +152,71 @@ def Identity():
 
 
 def Gameplay(local_name):
+    global CLIENT_CHAT
+    global PLAYERS
+    global CHAT
     local_pos = 250, 250
     LOCAL_PLAYER = player.Player(local_name, local_pos)
-    pickledplr = pickle.dumps(LOCAL_PLAYER.get_rect())
-    send(pickledplr)
+    send(LOCAL_PLAYER.get_rect())
 
-    ITEMS = []
-    PLAYERS = []
-    TEMPS = []
+    PLAYERS.append(LOCAL_PLAYER)
 
-    while True:
+    previousrect = LOCAL_PLAYER.get_rect()
+    PreviousPosition = previousrect.x, previousrect.y
+
+    while RUNNING:
+
         clock.tick(FPS)
         GAMEPLAY_MOUSE = pygame.mouse.get_pos()
         bg_color = (76, 176, 81)
         Screen.fill(bg_color)
 
-        LOCAL_PLAYER.update(Screen)
+        CurrentRect = LOCAL_PLAYER.get_rect()
+        CurrentPosition = CurrentRect.x, CurrentRect.y
+
+        if PreviousPosition != CurrentPosition:
+            send(CurrentRect)
+            PreviousPosition = CurrentPosition
+
+        for x in PLAYERS:
+            x.update(Screen)
+
+            TEXTCHAT = get_font(35).render("--CHAT ROOM--", True, "Black")
+            TEXTCHATRECT = TEXTCHAT.get_rect(center=(S_WIDTH / 2, (S_HEIGHT / 2) - 375))
+            Screen.blit(TEXTCHAT, TEXTCHATRECT)
+
 
         keys = pygame.key.get_pressed()
         movement = (keys[ord("d")] - keys[ord("a")]), (keys[ord("s")] - keys[ord("w")])
         if movement[0] != 0 or movement[1] != 0:
-            LOCAL_PLAYER.move(movement)
+            if PLAYERS[0].getstate() == "normal":
+                PLAYERS[0].move(movement)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 send(DISCONNECT_MESSAGE)
                 pygame.quit()
                 sys.exit("GameClosed")
+            if keys[ord("t")] and PLAYERS[0].getstate() == "normal":
+                PLAYERS[0].changestate()
+            if event.type == pygame.TEXTINPUT:
+                if PLAYERS[0].getstate() == "talking":
+                    char = event.text
+                    CLIENT_CHAT.append(char)
+            if keys[pygame.K_RETURN] and PLAYERS[0].getstate() == "talking":
+                LOCAL_PLAYER.changestate()
+                clientmessage = "".join(CLIENT_CHAT)
+                clientmessage = chat_request(clientmessage)
+                clientmessage = "".join(clientmessage)
+
+                senderinfo = clientmessage+";"+local_name
+                send(senderinfo)
+                clientmessage = clientmessage.removeprefix(CHAT_REQ)
+                clientmessage = "You: " + clientmessage
+                CHAT.append(clientmessage)
 
         pygame.display.update()
+
 
 
 def Connect(address):
