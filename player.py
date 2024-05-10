@@ -6,6 +6,10 @@ SPEED = 0.1                                         # Speed constant for player 
 
 class Player:                                       # The player class
 
+    @property
+    def state(self):
+        return self._state
+
     def __init__(self, _name: str, _pos: tuple):    # Constructor
 
         self.Name = _name                           # Name attribute
@@ -13,8 +17,10 @@ class Player:                                       # The player class
         self.x_pos = _pos[0]                        # Attribute stores X position
         self.y_pos = _pos[1]                        # Attribute stores Y position
 
-        self.rect = pygame.Rect((self.x_pos, self.y_pos), PLAYER_SIZE) # Stores the players rect
-        self.color = (random.randrange(255), random.randrange(100), random.randrange(255)) # Generates random color
+        self.state = "normal"
+
+        self.rect = pygame.Rect((self.x_pos, self.y_pos), PLAYER_SIZE)  # Stores the players rect
+        self.color = (random.randrange(255), random.randrange(100), random.randrange(255))  # Generates random color
 
         pickle.dumps(self.rect)                     # Serializes the rect to be sent later
 
@@ -23,8 +29,9 @@ class Player:                                       # The player class
         pygame.draw.rect(surface, self.color, self.rect)                # Draws the rect to the surface provided
 
     def move(self, movement):                                           # Moves the client, takes keyboard input
+
         hinput, vinput = movement[0], movement[1]                       # takes tuple movement and turns it into two
-                                                                        # seperate variables which is easier to read
+                                                                                    # seperate variables which is easier to read
         '''
         Summary: Converts movement to degrees
         This part of the code gets the direction of the vector between two points,
@@ -42,10 +49,25 @@ class Player:                                       # The player class
         lendir = [                                                      # Converts the radians into degrees stores
             math.degrees(SPEED * math.cos(math.radians(pntdir))),       # as a list cause why the hell not.
             math.degrees(SPEED * -math.sin(math.radians(pntdir)))
-            ]
+        ]
 
-        self.x_pos += lendir[0]                                         # += lendir to the x pos
-        self.y_pos += lendir[1]                                         # += lendir to the y pos
+        self .x_pos += lendir[0]                                         # += lendir to the x pos
+        self .y_pos += lendir[1]                                         # += lendir to the y pos
+
+    def changestate(self):
+        if self.state == "normal":
+            self.state = "talking"
+        elif self.state == "talking":
+            self.state = "normal"
+
+    def changex(self, newx):
+        self.x_pos = newx
+
+    def changey(self, newy):
+        self.y_pos = newy
+
+    def getstate(self):
+        return self.state
 
     def player_input(self, key):
         pass
@@ -60,3 +82,7 @@ class Player:                                       # The player class
 
     def get_rect(self):
         return self.rect
+
+    @state.setter
+    def state(self, value):
+        self._state = value
